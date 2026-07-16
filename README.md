@@ -80,14 +80,41 @@ Anthropic Claude (post generation) · OpenAI Whisper (speech-to-text)
   in the Parent Dashboard.
 - Basic PWA: web manifest, installable icon, a minimal service worker that caches
   the app shell for offline viewing, and an offline banner.
+- Branded app icon (favicon, `apple-touch-icon`, manifest icons) and six iPad-sized
+  "Add to Home Screen" launch splash screens, so it looks like a real app once
+  installed on the iPad.
+
+## App icon & iPad splash screens
+
+`scripts/icon-source.svg` is the single source of truth for the app icon (a
+gradient sparkle mark). `scripts/generate-icons.mjs` rasterizes it into every size
+the app needs and renders the six iPad splash screens (one per device class, at
+its native pixel resolution). To change the icon design or splash copy, edit
+`icon-source.svg` and/or the `renderSplashText` function in the script, then
+re-run:
+
+```bash
+node scripts/generate-icons.mjs
+```
+
+This regenerates:
+- `public/icon.svg` and `src/app/icon.svg` — favicon (Next.js picks this up
+  automatically via its file-based metadata convention).
+- `src/app/apple-icon.png` — iOS home-screen icon (also automatic).
+- `public/icons/icon-{16,32,180,192,512}.png` — referenced by the web manifest.
+- `public/splash/*.png` — referenced from `appleWebApp.startupImage` in
+  `src/app/layout.tsx`, one per iPad screen size/DPR combination.
+
+The script embeds the real Baloo 2 / Quicksand font files (fetched from Google
+Fonts) via `@napi-rs/canvas` rather than relying on SVG `<text>` — the SVG
+rasterizer here has no fontconfig and silently substitutes a generic font
+otherwise, which only shows up once you look at the output.
 
 ## Known simplifications vs. the full spec
 
 - The Fashion Studio renders a simplified SVG "paper doll" rather than illustrated
   artwork — the data model (hairstyles, clothing, patterns, accessories, nails) is
   complete, so real character art can be swapped in without a schema change.
-- `public/icon.svg` is a placeholder app icon — replace with real brand icons
-  (including PNG variants for stricter iOS home-screen caching) before shipping.
 - Video/photo editing is upload + preview only, no cropping/trimming, per MVP scope.
 - The offline queue is "view what's cached"; drafts created offline are not yet
   queued for background sync — creating a post while offline requires reconnecting
