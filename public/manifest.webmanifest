@@ -1,0 +1,13 @@
+{
+  "name": "My Little Studio",
+  "short_name": "My Studio",
+  "description": "Create. Imagine. Share Your Sparkle.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#FFF9F2",
+  "theme_color": "#F7B8D4",
+  "orientation": "portrait",
+  "icons": [
+    { "src": "/icon.svg", "sizes": "any", "type": "image/svg+xml", "purpose": "any maskable" }
+  ]
+}
