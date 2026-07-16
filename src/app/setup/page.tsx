@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { ensureSession } from "@/lib/supabase/ensureSession";
 import { PrimaryButton } from "@/components/PrimaryButton";
 
 const AVATARS = ["🦄", "🧚", "🌸", "🐱", "⭐", "🎀", "🐬", "🦋"];
@@ -28,29 +29,24 @@ export default function ChildSetupPage() {
     setSaving(true);
     setError("");
 
-    const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
+    try {
+      const supabase = createClient();
+      const session = await ensureSession();
 
-    if (!user) {
-      router.replace("/auth");
-      return;
-    }
+      const { error: insertError } = await supabase.from("child_profiles").insert({
+        parent_user_id: session.user.id,
+        nickname: nickname.trim(),
+        avatar_url: avatar,
+        favorite_color: favoriteColor,
+      });
 
-    const { error: insertError } = await supabase.from("child_profiles").insert({
-      parent_user_id: user.id,
-      nickname: nickname.trim(),
-      avatar_url: avatar,
-      favorite_color: favoriteColor,
-    });
-
-    setSaving(false);
-    if (insertError) {
+      if (insertError) throw insertError;
+      router.push("/home");
+    } catch {
       setError("That didn't save. Please try again.");
-      return;
+    } finally {
+      setSaving(false);
     }
-    router.push("/home");
   }
 
   return (

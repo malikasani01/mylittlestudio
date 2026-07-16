@@ -1,7 +1,6 @@
 "use client";
 
 import { useMemo, useState } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { ArrowLeft, Check } from "lucide-react";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
@@ -14,6 +13,7 @@ import { TopHeader } from "@/components/TopHeader";
 import { ErrorState } from "@/components/ErrorState";
 import { BACKGROUNDS } from "@/components/BackgroundPicker";
 import { createClient } from "@/lib/supabase/client";
+import { ensureSession } from "@/lib/supabase/ensureSession";
 import { uploadMedia } from "@/lib/media";
 import type { AiMode, PostCategory } from "@/lib/types";
 import type { GeneratedPost } from "@/lib/ai/generatePost";
@@ -32,7 +32,6 @@ const TYPE_CONFIG: Record<
 };
 
 export function CreateWizard({ type }: { type: CreateType }) {
-  const router = useRouter();
   const config = TYPE_CONFIG[type];
   const [stepIndex, setStepIndex] = useState(0);
   const step = config.steps[stepIndex];
@@ -134,18 +133,19 @@ export function CreateWizard({ type }: { type: CreateType }) {
     setSaving(true);
     setError("");
     const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      router.replace("/auth");
+    let session;
+    try {
+      session = await ensureSession();
+    } catch {
+      setError("That didn't save. Please try again.");
+      setSaving(false);
       return;
     }
 
     const { data: child } = await supabase
       .from("child_profiles")
       .select("id")
-      .eq("parent_user_id", user.id)
+      .eq("parent_user_id", session.user.id)
       .limit(1)
       .single();
 
@@ -180,7 +180,7 @@ export function CreateWizard({ type }: { type: CreateType }) {
     try {
       let sortOrder = 0;
       for (const file of photoFiles) {
-        const path = await uploadMedia("image", user.id, file, file.name);
+        const path = await uploadMedia("image", session.user.id, file, file.name);
         await supabase.from("media_assets").insert({
           post_id: post.id,
           type: "image",
@@ -189,7 +189,7 @@ export function CreateWizard({ type }: { type: CreateType }) {
         });
       }
       if (audioBlob) {
-        const path = await uploadMedia("audio", user.id, audioBlob, "audio.webm");
+        const path = await uploadMedia("audio", session.user.id, audioBlob, "audio.webm");
         await supabase.from("media_assets").insert({
           post_id: post.id,
           type: "audio",
@@ -198,7 +198,7 @@ export function CreateWizard({ type }: { type: CreateType }) {
         });
       }
       if (videoBlob) {
-        const path = await uploadMedia("video", user.id, videoBlob, "video.webm");
+        const path = await uploadMedia("video", session.user.id, videoBlob, "video.webm");
         await supabase.from("media_assets").insert({
           post_id: post.id,
           type: "video",

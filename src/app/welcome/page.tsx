@@ -1,7 +1,36 @@
-import Link from "next/link";
+"use client";
+
+import { useState } from "react";
+import { useRouter } from "next/navigation";
 import { Scissors, Camera, Mic, Shirt, BookOpen } from "lucide-react";
+import { ensureSession } from "@/lib/supabase/ensureSession";
+import { createClient } from "@/lib/supabase/client";
+import { PrimaryButton } from "@/components/PrimaryButton";
 
 export default function WelcomePage() {
+  const router = useRouter();
+  const [starting, setStarting] = useState(false);
+  const [error, setError] = useState("");
+
+  async function startCreating() {
+    setStarting(true);
+    setError("");
+    try {
+      const session = await ensureSession();
+      const supabase = createClient();
+      const { data: child } = await supabase
+        .from("child_profiles")
+        .select("id")
+        .eq("parent_user_id", session.user.id)
+        .limit(1)
+        .maybeSingle();
+      router.push(child ? "/home" : "/setup");
+    } catch {
+      setError("That didn't work. Please try again.");
+      setStarting(false);
+    }
+  }
+
   return (
     <main className="flex flex-1 flex-col items-center justify-center gap-8 bg-gradient-to-b from-pink/25 via-cream to-lilac/15 px-6 py-12 text-center">
       <div className="flex flex-col items-center gap-3">
@@ -22,16 +51,15 @@ export default function WelcomePage() {
         ))}
       </div>
 
-      <div className="flex flex-col items-center gap-3">
-        <Link
-          href="/auth"
-          className="flex min-h-[52px] items-center justify-center rounded-2xl bg-pink px-10 py-3 font-round text-lg font-bold text-ink shadow-sm hover:bg-pink/80"
+      <div className="flex flex-col items-center gap-2">
+        <PrimaryButton
+          onClick={startCreating}
+          disabled={starting}
+          className="min-h-[52px] px-10 text-lg"
         >
-          Start Creating
-        </Link>
-        <Link href="/auth?parent=1" className="font-round text-sm text-ink/60 underline">
-          Parent Setup
-        </Link>
+          {starting ? "Getting ready…" : "Start Creating"}
+        </PrimaryButton>
+        {error && <p className="font-round text-sm text-ink/60">{error}</p>}
       </div>
     </main>
   );

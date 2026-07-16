@@ -41,9 +41,15 @@ Anthropic Claude (post generation) · OpenAI Whisper (speech-to-text)
    If you'd rather use the CLI: `npx supabase link --project-ref uklaflxasjoqkcruipyd`
    then `npx supabase db push`.
 
-4. **Enable email auth.** In Supabase Auth settings, make sure Email (magic link / OTP)
-   sign-in is enabled. No password is required — this app uses passwordless sign-in for
-   the parent only; the child never needs an email address.
+4. **Enable anonymous sign-ins.** In the Supabase dashboard, go to
+   **Authentication → Sign In / Providers → Anonymous** and turn it on. This app is one
+   installed PWA per family (not a multi-device account system), so there's no email
+   step at all: tapping "Start Creating" transparently opens an anonymous Supabase
+   session on that device, which is what RLS keys off. (An earlier version used
+   email magic links for the parent, but iOS keeps an installed PWA's storage
+   isolated from Safari, so a link opened in Safari never reached the installed app's
+   session — anonymous sign-in sidesteps that entirely.) The Parent Area PIN is the
+   actual privacy gate, not this sign-in step.
 
 5. **Run the dev server**
 
@@ -51,12 +57,12 @@ Anthropic Claude (post generation) · OpenAI Whisper (speech-to-text)
    npm run dev
    ```
 
-   Open http://localhost:3000. On first load: **Welcome → parent sign-in via email
-   link → Child Profile Setup → Home**.
+   Open http://localhost:3000. On first load: **Welcome → tap Start Creating →
+   Child Profile Setup → Home**.
 
 ## What's implemented (first milestone)
 
-- Splash → Welcome → parent magic-link sign-in → Child Profile Setup → Home
+- Splash → Welcome → anonymous sign-in (silent) → Child Profile Setup → Home
 - Bottom navigation: Home · Create · Studio · Journal
 - **Create a Post**: type selection (story / craft / song / photos / video), voice
   recording with live waveform + timer, server-side transcription (OpenAI Whisper),
@@ -126,7 +132,6 @@ otherwise, which only shows up once you look at the output.
 src/
   app/
     (main)/            Home, Create, Studio, Journal — screens with bottom nav
-    auth/               Parent magic-link sign-in + callback
     setup/              Child Profile Setup
     parent/             PIN-gated Parent Area (dashboard, settings, trash)
     export/[postId]/    Parent-approved export preview

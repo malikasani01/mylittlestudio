@@ -25,6 +25,7 @@ import {
   PATTERNS,
 } from "@/lib/fashionOptions";
 import { createClient } from "@/lib/supabase/client";
+import { ensureSession } from "@/lib/supabase/ensureSession";
 import { uploadMedia } from "@/lib/media";
 
 const CATEGORIES = [
@@ -133,18 +134,19 @@ export default function FashionStudioPage() {
     setShowNamePrompt(false);
     setSaving(true);
     const supabase = createClient();
-    const {
-      data: { user },
-    } = await supabase.auth.getUser();
-    if (!user) {
-      router.replace("/auth");
+
+    let session;
+    try {
+      session = await ensureSession();
+    } catch {
+      setSaving(false);
       return;
     }
 
     const { data: child } = await supabase
       .from("child_profiles")
       .select("id")
-      .eq("parent_user_id", user.id)
+      .eq("parent_user_id", session.user.id)
       .limit(1)
       .single();
 
@@ -156,7 +158,7 @@ export default function FashionStudioPage() {
     const title = savedName.trim() || "My New Look";
     const imageBlob = await renderSvgToBlob();
     // fashion-renders is a private bucket; this is a storage path, resolved to a signed URL on display.
-    const renderPath = await uploadMedia("fashionImage", user.id, imageBlob, "look.png");
+    const renderPath = await uploadMedia("fashionImage", session.user.id, imageBlob, "look.png");
 
     let postId: string | null = null;
     if (pendingAddToJournal) {

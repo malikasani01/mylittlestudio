@@ -5,6 +5,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { X } from "lucide-react";
 import { createClient } from "@/lib/supabase/client";
+import { ensureSession } from "@/lib/supabase/ensureSession";
 import { useParentGate } from "@/hooks/useParentGate";
 import { ParentPinModal } from "@/components/ParentPinModal";
 import { PinSetupForm } from "@/components/PinSetupForm";
@@ -23,20 +24,16 @@ export default function ParentLayout({ children }: { children: React.ReactNode }
 
   useEffect(() => {
     if (unlocked) return;
-    const supabase = createClient();
-    supabase.auth.getUser().then(async ({ data: { user } }) => {
-      if (!user) {
-        router.replace("/auth");
-        return;
-      }
+    ensureSession().then(async (session) => {
+      const supabase = createClient();
       const { data } = await supabase
         .from("parent_users")
         .select("pin_hash")
-        .eq("id", user.id)
+        .eq("id", session.user.id)
         .single();
       setHasPin(Boolean(data?.pin_hash));
     });
-  }, [unlocked, router]);
+  }, [unlocked]);
 
   if (!checked) return null;
 
