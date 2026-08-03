@@ -71,11 +71,15 @@ Anthropic Claude (post generation) · OpenAI Whisper (speech-to-text)
   background, up to 5 stickers), Preview, and Save to Journal.
 - **My Journal**: filterable/sortable grid, search, favorites, post detail with
   edit/favorite/export/delete-to-trash.
-- **Fashion Studio**: layered SVG character (paper-doll style placeholder art — swap
-  in real illustrations later), category tabs for skin/hair/tops/bottoms/dresses/
-  shoes/accessories/nails/colors/patterns/background, undo/redo/random/start-over,
-  save look and/or add to journal (renders a PNG snapshot of the SVG into
-  `fashion-renders`).
+- **Fashion Studio**: a layered SVG paper-doll engine (`src/lib/doll.ts`,
+  ported from the family's own "Dress-Up Studio" design) with 6 base
+  characters, anime-style eyes, and independent layers for skin, eyes, hair
+  (7 styles), top (6), bottom (3), shoes (3), glasses, hat, jewelry, bag,
+  **wings** (fairy/butterfly), and a **pet** companion (8 animals). Category
+  tabs + per-category colour swatches, a base-character roster, undo/redo/
+  surprise/start-over, and save / add-to-journal (renders a PNG snapshot of the
+  SVG into `fashion-renders` and stores the full layer config in
+  `fashion_designs.design_configuration`).
 - **Parent Area** (PIN-gated, 5-minute unlock window): Dashboard (content summary,
   safety-flag review queue, export approvals), Settings (privacy toggles, media
   limits, AI mode toggles), Trash (restore / permanently delete).
@@ -118,9 +122,9 @@ otherwise, which only shows up once you look at the output.
 
 ## Known simplifications vs. the full spec
 
-- The Fashion Studio renders a simplified SVG "paper doll" rather than illustrated
-  artwork — the data model (hairstyles, clothing, patterns, accessories, nails) is
-  complete, so real character art can be swapped in without a schema change.
+- The Fashion Studio uses layered SVG art (in `src/lib/doll.ts`) rather than
+  illustrated artwork; layers are independent, so richer art can be swapped in
+  per-layer without a schema change.
 - Video/photo editing is upload + preview only, no cropping/trimming, per MVP scope.
 - The offline queue is "view what's cached"; drafts created offline are not yet
   queued for background sync — creating a post while offline requires reconnecting
