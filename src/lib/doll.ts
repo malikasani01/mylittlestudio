@@ -18,9 +18,13 @@ export interface DollConfig {
   shoes: string;
   shoeColor: string;
   glasses: string;
+  glassesColor: string;
   hat: string;
   hatColor: string;
-  jewelry: string;
+  earrings: string;
+  earringColor: string;
+  necklace: string;
+  necklaceColor: string;
   bag: string;
   bagColor: string;
   wings: string;
@@ -37,14 +41,17 @@ export const EYES = ["#6B4226", "#3B7A57", "#4E7CB0", "#2a2233", "#7A4FB5", "#B5
 export const HAIR = ["#FF5CA8", "#A45CFF", "#4EA8FF", "#17C3B2", "#FFC93C", "#FF6B4A", "#6BE3B8", "#2B2B33", "#6B4226", "#F4D06F"];
 export const CLOTH = ["#FF5CA8", "#A45CFF", "#4EA8FF", "#17C3B2", "#FFC93C", "#FF6B4A", "#6BE3B8", "#FF9F1C", "#3A3F58", "#FFFFFF"];
 export const BRIGHT = ["#FF5CA8", "#A45CFF", "#4EA8FF", "#17C3B2", "#FFC93C", "#FF6B4A", "#8367FF", "#2ED1B4"];
+// Jewelry / frame palette: gold, pearl, pink, blue, purple, teal, coral, black.
+export const JEWEL = ["#FFC93C", "#F3F0F5", "#FF5CA8", "#4EA8FF", "#8367FF", "#17C3B2", "#FF6B4A", "#2B2B33"];
 
 export const HAIRSTYLES: StyleList = [["short", "Short"], ["bob", "Bob"], ["long", "Long"], ["buns", "Twin buns"], ["pony", "Ponytail"], ["pig", "Pigtails"], ["afro", "Afro"]];
 export const TOPS: StyleList = [["tee", "Tee"], ["stripes", "Stripes"], ["hoodie", "Hoodie"], ["tank", "Tank"], ["sweater", "Sweater"], ["dress", "Dress"]];
 export const BOTTOMS: StyleList = [["skirt", "Skirt"], ["shorts", "Shorts"], ["pants", "Pants"]];
 export const SHOES: StyleList = [["sneakers", "Sneakers"], ["boots", "Boots"], ["flats", "Flats"]];
-export const GLASSES: StyleList = [["none", "None"], ["round", "Round"], ["heart", "Heart"], ["square", "Square"]];
+export const GLASSES: StyleList = [["none", "None"], ["round", "Round"], ["square", "Square"], ["heart", "Heart"], ["cateye", "Cat-eye"], ["aviator", "Aviator"], ["hexagon", "Hexagon"]];
 export const HATS: StyleList = [["none", "None"], ["beanie", "Beanie"], ["cap", "Cap"], ["band", "Headband"], ["bow", "Bow"], ["flowers", "Flowers"]];
-export const JEWELRY: StyleList = [["none", "None"], ["necklace", "Necklace"], ["earrings", "Earrings"], ["both", "Both"]];
+export const EARRING_STYLES: StyleList = [["none", "None"], ["stud", "Studs"], ["hoop", "Hoops"], ["dangle", "Dangle"], ["flower", "Flower"], ["star", "Star"], ["pearl", "Pearl"]];
+export const NECKLACE_STYLES: StyleList = [["none", "None"], ["choker", "Choker"], ["pendant", "Pendant"], ["pearls", "Pearls"], ["chainstar", "Star charm"], ["layered", "Layered"], ["bowcharm", "Bow charm"]];
 export const BAGS: StyleList = [["none", "None"], ["backpack", "Backpack"], ["handbag", "Handbag"]];
 export const WINGS: StyleList = [["none", "None"], ["fairy", "Fairy"], ["butterfly", "Butterfly"]];
 export const PETS: StyleList = [["none", "None"], ["dog", "Puppy"], ["cat", "Cat"], ["turtle", "Turtle"], ["fox", "Fox"], ["bunny", "Bunny"], ["panda", "Panda"], ["wolf", "Wolf"], ["dragon", "Dragon"]];
@@ -52,7 +59,7 @@ export const PETDEF: Record<string, string> = { cat: "#FFB74D", dog: "#C69C6D", 
 
 export const CATS: [string, string][] = [
   ["skin", "Skin"], ["eyes", "Eyes"], ["hair", "Hair"], ["top", "Top"], ["bottom", "Bottom"],
-  ["shoes", "Shoes"], ["glasses", "Glasses"], ["hat", "Hat"], ["jewelry", "Jewelry"], ["bag", "Bag"], ["wings", "Wings"], ["pet", "Pet"],
+  ["shoes", "Shoes"], ["glasses", "Glasses"], ["hat", "Hat"], ["earrings", "Earrings"], ["necklace", "Necklace"], ["bag", "Bag"], ["wings", "Wings"], ["pet", "Pet"],
 ];
 
 export interface CatConfig {
@@ -71,9 +78,10 @@ export function catConfig(id: string): CatConfig {
     case "top": return { styleField: "top", styles: TOPS, colorField: "topColor", colors: CLOTH, colorLabel: "Top colour" };
     case "bottom": return { styleField: "bottom", styles: BOTTOMS, colorField: "bottomColor", colors: CLOTH, colorLabel: "Bottom colour" };
     case "shoes": return { styleField: "shoes", styles: SHOES, colorField: "shoeColor", colors: CLOTH, colorLabel: "Shoe colour" };
-    case "glasses": return { styleField: "glasses", styles: GLASSES };
+    case "glasses": return { styleField: "glasses", styles: GLASSES, colorField: "glassesColor", colors: JEWEL, colorLabel: "Frame colour" };
     case "hat": return { styleField: "hat", styles: HATS, colorField: "hatColor", colors: BRIGHT, colorLabel: "Hat colour" };
-    case "jewelry": return { styleField: "jewelry", styles: JEWELRY };
+    case "earrings": return { styleField: "earrings", styles: EARRING_STYLES, colorField: "earringColor", colors: JEWEL, colorLabel: "Earring colour" };
+    case "necklace": return { styleField: "necklace", styles: NECKLACE_STYLES, colorField: "necklaceColor", colors: JEWEL, colorLabel: "Necklace colour" };
     case "bag": return { styleField: "bag", styles: BAGS, colorField: "bagColor", colors: BRIGHT, colorLabel: "Bag colour" };
     case "wings": return { styleField: "wings", styles: WINGS, colorField: "wingColor", colors: BRIGHT, colorLabel: "Wing colour" };
     case "pet": return { styleField: "pet", styles: PETS, colorField: "petColor", colors: BRIGHT, colorLabel: "Pet colour" };
@@ -98,8 +106,9 @@ export function makeChar(o: Partial<DollConfig>): DollConfig {
       top: "tee", topColor: "#FF5CA8",
       bottom: "skirt", bottomColor: "#A45CFF",
       shoes: "sneakers", shoeColor: "#FFFFFF",
-      glasses: "none", hat: "none", hatColor: "#FF5CA8",
-      jewelry: "none", bag: "none", bagColor: "#4EA8FF",
+      glasses: "none", glassesColor: "#2B2B33", hat: "none", hatColor: "#FF5CA8",
+      earrings: "none", earringColor: "#FFC93C", necklace: "none", necklaceColor: "#FFC93C",
+      bag: "none", bagColor: "#4EA8FF",
       wings: "none", wingColor: "#FFC93C",
       pet: "none", petColor: "",
     },
@@ -111,9 +120,9 @@ export function defaultCharacters(): DollConfig[] {
   return [
     makeChar({ name: "Hana", tag: "fairy dress", skin: "#FCD9B8", eye: "#7A4FB5", hairStyle: "long", hairColor: "#FF5CA8", top: "dress", topColor: "#A45CFF", shoes: "flats", shoeColor: "#FF5CA8", hat: "bow", hatColor: "#FFC93C", wings: "fairy", wingColor: "#FF9BD2" }),
     makeChar({ name: "Sora", tag: "hoodie + specs", skin: "#5E3A1E", eye: "#2a2233", hairStyle: "short", hairColor: "#4EA8FF", top: "hoodie", topColor: "#4EA8FF", bottom: "pants", bottomColor: "#3A3F58", shoes: "boots", shoeColor: "#2B2B33", glasses: "round" }),
-    makeChar({ name: "Emi", tag: "buns + flowers", skin: "#E0A470", eye: "#3B7A57", hairStyle: "buns", hairColor: "#17C3B2", top: "sweater", topColor: "#6BE3B8", bottom: "skirt", bottomColor: "#FFC93C", shoes: "flats", shoeColor: "#FF5CA8", hat: "flowers", jewelry: "earrings" }),
+    makeChar({ name: "Emi", tag: "buns + flowers", skin: "#E0A470", eye: "#3B7A57", hairStyle: "buns", hairColor: "#17C3B2", top: "sweater", topColor: "#6BE3B8", bottom: "skirt", bottomColor: "#FFC93C", shoes: "flats", shoeColor: "#FF5CA8", hat: "flowers", earrings: "flower", earringColor: "#FF5CA8" }),
     makeChar({ name: "Riku", tag: "sporty tee", skin: "#C6824A", eye: "#6B4226", hairStyle: "short", hairColor: "#2B2B33", top: "tee", topColor: "#FF6B4A", bottom: "shorts", bottomColor: "#4EA8FF", shoes: "sneakers", shoeColor: "#FFC93C", hat: "cap", hatColor: "#8367FF" }),
-    makeChar({ name: "Nia", tag: "pony + tank", skin: "#9A5E2E", eye: "#6B4226", hairStyle: "pony", hairColor: "#F4D06F", top: "tank", topColor: "#FF5CA8", bottom: "skirt", bottomColor: "#FFC93C", shoes: "sneakers", shoeColor: "#A45CFF", jewelry: "both" }),
+    makeChar({ name: "Nia", tag: "pony + tank", skin: "#9A5E2E", eye: "#6B4226", hairStyle: "pony", hairColor: "#F4D06F", top: "tank", topColor: "#FF5CA8", bottom: "skirt", bottomColor: "#FFC93C", shoes: "sneakers", shoeColor: "#A45CFF", earrings: "stud", earringColor: "#FFC93C", necklace: "pendant", necklaceColor: "#FFC93C" }),
     makeChar({ name: "Pip", tag: "pigtails + pack", skin: "#F3B98C", eye: "#4E7CB0", hairStyle: "pig", hairColor: "#4EA8FF", top: "sweater", topColor: "#6BE3B8", bottom: "pants", bottomColor: "#FF5CA8", shoes: "flats", shoeColor: "#FFC93C", hat: "band", hatColor: "#FF5CA8", bag: "backpack", bagColor: "#A45CFF" }),
   ];
 }
@@ -125,10 +134,33 @@ export function randomizeChar(c: DollConfig): DollConfig {
     top: pick(TOPS)[0], topColor: pick(CLOTH),
     bottom: pick(BOTTOMS)[0], bottomColor: pick(CLOTH),
     shoes: pick(SHOES)[0], shoeColor: pick(CLOTH),
-    glasses: pick(GLASSES)[0], hat: pick(HATS)[0], hatColor: pick(BRIGHT),
-    jewelry: pick(JEWELRY)[0], bag: pick(BAGS)[0], bagColor: pick(BRIGHT),
+    glasses: pick(GLASSES)[0], glassesColor: pick(JEWEL), hat: pick(HATS)[0], hatColor: pick(BRIGHT),
+    earrings: pick(EARRING_STYLES)[0], earringColor: pick(JEWEL),
+    necklace: pick(NECKLACE_STYLES)[0], necklaceColor: pick(JEWEL),
+    bag: pick(BAGS)[0], bagColor: pick(BRIGHT),
     wings: pick(WINGS)[0], wingColor: pick(BRIGHT),
   });
+}
+
+function flowerAt(cx: number, cy: number, col: string, d: string, scale = 1): string {
+  let s = "";
+  for (let i = 0; i < 5; i++) {
+    const rad = ((i * 72) * Math.PI) / 180;
+    const px = cx + Math.cos(rad) * 6 * scale;
+    const py = cy + Math.sin(rad) * 6 * scale;
+    s += `<circle cx="${px.toFixed(1)}" cy="${py.toFixed(1)}" r="${(5 * scale).toFixed(1)}" fill="${col}"/>`;
+  }
+  return s + `<circle cx="${cx}" cy="${cy}" r="${(3.2 * scale).toFixed(1)}" fill="${d}"/>`;
+}
+
+function starAt(cx: number, cy: number, r: number, col: string): string {
+  const pts: string[] = [];
+  for (let i = 0; i < 10; i++) {
+    const rad = (Math.PI / 5) * i - Math.PI / 2;
+    const rr = i % 2 === 0 ? r : r * 0.45;
+    pts.push((cx + Math.cos(rad) * rr).toFixed(1) + "," + (cy + Math.sin(rad) * rr).toFixed(1));
+  }
+  return `<polygon points="${pts.join(" ")}" fill="${col}"/>`;
 }
 
 export function buildPet(kind: string, col: string): string {
@@ -227,13 +259,36 @@ export function buildDoll(c: DollConfig): string {
   if (c.hat === "band") S.push(`<path d="M44,82 Q110,64 176,82" stroke="${ha}" stroke-width="13" fill="none" stroke-linecap="round"/>`);
   if (c.hat === "bow") S.push(`<g><path d="M138,58 L162,48 L162,80 L138,70 Z" fill="${ha}"/><path d="M182,58 L158,48 L158,80 L182,70 Z" fill="${ha}"/><circle cx="160" cy="64" r="8" fill="${had}"/></g>`);
   if (c.hat === "flowers") { const cols = ["#FF5CA8", "#FFC93C", "#4EA8FF", "#8367FF", "#2ED1B4"]; let x = 54; let s = ""; for (let i = 0; i < 6; i++) { s += `<circle cx="${x}" cy="${70 + (i % 2 ? 6 : 0)}" r="9" fill="${cols[i % cols.length]}"/><circle cx="${x}" cy="${70 + (i % 2 ? 6 : 0)}" r="3.5" fill="#fff"/>`; x += 21; } S.push(`<g>${s}</g>`); }
-  // glasses
-  if (c.glasses === "round") S.push(`<circle cx="84" cy="106" r="17" fill="#ffffff33" stroke="#3a3340" stroke-width="4"/><circle cx="136" cy="106" r="17" fill="#ffffff33" stroke="#3a3340" stroke-width="4"/><line x1="101" y1="106" x2="119" y2="106" stroke="#3a3340" stroke-width="4"/>`);
-  if (c.glasses === "square") S.push(`<rect x="67" y="94" width="34" height="26" rx="7" fill="#ffffff33" stroke="#3a3340" stroke-width="4"/><rect x="119" y="94" width="34" height="26" rx="7" fill="#ffffff33" stroke="#3a3340" stroke-width="4"/><line x1="101" y1="104" x2="119" y2="104" stroke="#3a3340" stroke-width="4"/>`);
-  if (c.glasses === "heart") { const h = (x: number) => `<path d="M${x},116 C${x - 18},100 ${x - 14},90 ${x},98 C${x + 14},90 ${x + 18},100 ${x},116 Z" fill="#ffffff22" stroke="#ff4f8b" stroke-width="4"/>`; S.push(h(84) + h(136)); }
-  // jewelry
-  if (c.jewelry === "necklace" || c.jewelry === "both") S.push(`<path d="M84,158 Q110,178 136,158" stroke="#FFC93C" stroke-width="4" fill="none"/><circle cx="110" cy="176" r="6" fill="#FF6B4A"/>`);
-  if (c.jewelry === "earrings" || c.jewelry === "both") S.push(`<circle cx="52" cy="122" r="5" fill="#FFC93C"/><circle cx="168" cy="122" r="5" fill="#FFC93C"/>`);
+  // glasses (frame colour recolourable)
+  const gc = c.glassesColor || "#3a3340", lens = "#ffffff33";
+  if (c.glasses === "round") S.push(`<circle cx="84" cy="106" r="16" fill="${lens}" stroke="${gc}" stroke-width="4"/><circle cx="136" cy="106" r="16" fill="${lens}" stroke="${gc}" stroke-width="4"/><line x1="100" y1="106" x2="120" y2="106" stroke="${gc}" stroke-width="4"/>`);
+  if (c.glasses === "square") S.push(`<rect x="68" y="93" width="32" height="26" rx="7" fill="${lens}" stroke="${gc}" stroke-width="4"/><rect x="120" y="93" width="32" height="26" rx="7" fill="${lens}" stroke="${gc}" stroke-width="4"/><line x1="100" y1="106" x2="120" y2="106" stroke="${gc}" stroke-width="4"/>`);
+  if (c.glasses === "heart") { const h = (x: number) => `<path d="M${x},116 C${x - 18},100 ${x - 14},90 ${x},98 C${x + 14},90 ${x + 18},100 ${x},116 Z" fill="#ffffff22" stroke="${gc}" stroke-width="4"/>`; S.push(h(84) + h(136) + `<line x1="100" y1="103" x2="120" y2="103" stroke="${gc}" stroke-width="4"/>`); }
+  if (c.glasses === "cateye") { const ce = (x: number) => `<path d="M${x - 16},108 Q${x - 18},95 ${x - 1},95 Q${x + 15},93 ${x + 16},104 Q${x + 16},117 ${x},117 Q${x - 14},117 ${x - 16},108 Z" fill="${lens}" stroke="${gc}" stroke-width="4"/>`; S.push(ce(84) + ce(136) + `<line x1="100" y1="104" x2="120" y2="104" stroke="${gc}" stroke-width="4"/>`); }
+  if (c.glasses === "aviator") { const av = (x: number) => `<path d="M${x - 15},99 Q${x + 15},99 ${x + 15},108 Q${x + 14},121 ${x},122 Q${x - 14},121 ${x - 15},108 Q${x - 15},99 ${x - 15},99 Z" fill="${lens}" stroke="${gc}" stroke-width="4"/>`; S.push(av(84) + av(136) + `<line x1="100" y1="102" x2="120" y2="102" stroke="${gc}" stroke-width="4"/>`); }
+  if (c.glasses === "hexagon") { const hx = (x: number) => `<polygon points="${x - 8},92 ${x + 8},92 ${x + 16},106 ${x + 8},120 ${x - 8},120 ${x - 16},106" fill="${lens}" stroke="${gc}" stroke-width="4"/>`; S.push(hx(84) + hx(136) + `<line x1="100" y1="106" x2="120" y2="106" stroke="${gc}" stroke-width="4"/>`); }
+  // earrings
+  const eac = c.earringColor || "#FFC93C", ead = shade(eac, 0.75);
+  if (c.earrings !== "none" && c.earrings) {
+    const ear = (x: number) => {
+      if (c.earrings === "stud") return `<circle cx="${x}" cy="121" r="5" fill="${eac}"/>`;
+      if (c.earrings === "hoop") return `<circle cx="${x}" cy="126" r="8" fill="none" stroke="${eac}" stroke-width="3"/>`;
+      if (c.earrings === "dangle") return `<circle cx="${x}" cy="118" r="3.5" fill="${eac}"/><path d="M${x - 4},124 Q${x},137 ${x + 4},124 Q${x + 4},132 ${x},135 Q${x - 4},132 ${x - 4},124 Z" fill="${eac}"/>`;
+      if (c.earrings === "flower") return flowerAt(x, 123, eac, ead, 0.7);
+      if (c.earrings === "star") return starAt(x, 123, 7, eac);
+      if (c.earrings === "pearl") return `<circle cx="${x}" cy="116" r="3.5" fill="${eac}"/><line x1="${x}" y1="119" x2="${x}" y2="126" stroke="${ead}" stroke-width="1.5"/><circle cx="${x}" cy="130" r="4.5" fill="${eac}"/><circle cx="${x - 1.5}" cy="128.5" r="1.3" fill="#ffffffcc"/>`;
+      return "";
+    };
+    S.push(ear(52) + ear(168));
+  }
+  // necklace
+  const nc = c.necklaceColor || "#FFC93C", nd = shade(nc, 0.75);
+  if (c.necklace === "choker") S.push(`<path d="M88,153 Q110,164 132,153" stroke="${nc}" stroke-width="8" fill="none" stroke-linecap="round"/>`);
+  if (c.necklace === "pendant") S.push(`<path d="M86,151 Q110,172 134,151" stroke="${nc}" stroke-width="3" fill="none"/><path d="M110,170 C104,163 106,157 110,161 C114,157 116,163 110,170 Z" fill="${nc}"/>`);
+  if (c.necklace === "pearls") S.push(`<path d="M86,151 Q110,170 134,151" stroke="${nd}" stroke-width="2" fill="none"/>` + [[92, 157], [101, 163], [110, 166], [119, 163], [128, 157]].map(([x, y]) => `<circle cx="${x}" cy="${y}" r="4" fill="${nc}"/><circle cx="${x - 1.3}" cy="${y - 1.3}" r="1.1" fill="#ffffffcc"/>`).join(""));
+  if (c.necklace === "chainstar") S.push(`<path d="M86,151 Q110,170 134,151" stroke="${nc}" stroke-width="2.5" fill="none"/>` + starAt(110, 172, 8, nc));
+  if (c.necklace === "layered") S.push(`<path d="M92,151 Q110,163 128,151" stroke="${nd}" stroke-width="2.5" fill="none"/><path d="M86,151 Q110,177 134,151" stroke="${nc}" stroke-width="2.5" fill="none"/><circle cx="110" cy="177" r="4.5" fill="${nc}"/>`);
+  if (c.necklace === "bowcharm") S.push(`<path d="M86,151 Q110,170 134,151" stroke="${nc}" stroke-width="3" fill="none"/><path d="M110,169 L100,163 L100,177 Z" fill="${nc}"/><path d="M110,169 L120,163 L120,177 Z" fill="${nc}"/><circle cx="110" cy="169" r="3.2" fill="${nd}"/>`);
   // bag
   const bg = c.bagColor, bgd = shade(bg, 0.78);
   if (c.bag === "backpack") S.push(`<rect x="150" y="176" width="24" height="56" rx="10" fill="${bg}"/><rect x="86" y="150" width="10" height="86" rx="5" fill="${bgd}"/><rect x="124" y="150" width="10" height="86" rx="5" fill="${bgd}"/>`);

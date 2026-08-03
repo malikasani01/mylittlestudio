@@ -146,7 +146,7 @@ export default function FashionStudioPage() {
         }
       }
 
-      const worn = [cur.glasses, cur.hat, cur.jewelry, cur.bag, cur.wings].filter((v) => v && v !== "none");
+      const worn = [cur.glasses, cur.hat, cur.earrings, cur.necklace, cur.bag, cur.wings].filter((v) => v && v !== "none");
       await supabase.from("fashion_designs").insert({
         child_profile_id: child.id,
         post_id: postId,
