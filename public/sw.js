@@ -1,4 +1,4 @@
-const CACHE_NAME = "mls-shell-v1";
+const CACHE_NAME = "mls-shell-v2";
 const SHELL_URLS = ["/", "/welcome", "/manifest.webmanifest", "/icon.svg"];
 
 self.addEventListener("install", (event) => {

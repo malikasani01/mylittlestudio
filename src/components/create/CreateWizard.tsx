@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { ArrowLeft, Check } from "lucide-react";
 import { VoiceRecorder } from "@/components/VoiceRecorder";
@@ -15,6 +15,7 @@ import { BACKGROUNDS } from "@/components/BackgroundPicker";
 import { createClient } from "@/lib/supabase/client";
 import { ensureSession } from "@/lib/supabase/ensureSession";
 import { uploadMedia } from "@/lib/media";
+import { extForMime } from "@/lib/recording";
 import type { AiMode, PostCategory } from "@/lib/types";
 import type { GeneratedPost } from "@/lib/ai/generatePost";
 
@@ -48,6 +49,11 @@ export function CreateWizard({ type }: { type: CreateType }) {
   const [saving, setSaving] = useState(false);
   const [savedPostId, setSavedPostId] = useState<string | null>(null);
 
+  // Track progress so a retry after a failed save resumes instead of creating
+  // a duplicate post or re-uploading media that already succeeded.
+  const postIdRef = useRef<string | null>(null);
+  const uploadedRef = useRef({ photos: 0, audio: false, video: false });
+
   const [draft, setDraft] = useState<EditableDraft>({
     title: "",
     body: "",
@@ -69,8 +75,9 @@ export function CreateWizard({ type }: { type: CreateType }) {
     setTranscribing(true);
     setError("");
     try {
+      const ext = extForMime(blob.type, "m4a");
       const formData = new FormData();
-      formData.append("audio", blob, "recording.webm");
+      formData.append("audio", blob, `recording.${ext}`);
       const res = await fetch("/api/transcribe", { method: "POST", body: formData });
       const data = await res.json();
       if (!res.ok) throw new Error(data.error);
@@ -133,86 +140,74 @@ export function CreateWizard({ type }: { type: CreateType }) {
     setSaving(true);
     setError("");
     const supabase = createClient();
-    let session;
-    try {
-      session = await ensureSession();
-    } catch {
-      setError("That didn't save. Please try again.");
-      setSaving(false);
-      return;
-    }
-
-    const { data: child } = await supabase
-      .from("child_profiles")
-      .select("id")
-      .eq("parent_user_id", session.user.id)
-      .limit(1)
-      .single();
-
-    if (!child) {
-      setError("We couldn't find your profile.");
-      setSaving(false);
-      return;
-    }
-
-    const { data: post, error: postError } = await supabase
-      .from("posts")
-      .insert({
-        child_profile_id: child.id,
-        title: draft.title || "Untitled",
-        edited_text: draft.body,
-        original_transcript: transcript || null,
-        ai_mode: transcript ? activeMode : null,
-        category: draft.category,
-        background: draft.background,
-        stickers: draft.stickers,
-        status: "publishedToJournal",
-      })
-      .select()
-      .single();
-
-    if (postError || !post) {
-      setError("That didn't save. Please try again.");
-      setSaving(false);
-      return;
-    }
 
     try {
-      let sortOrder = 0;
-      for (const file of photoFiles) {
-        const path = await uploadMedia("image", session.user.id, file, file.name);
-        await supabase.from("media_assets").insert({
-          post_id: post.id,
-          type: "image",
-          storage_path: path,
-          sort_order: sortOrder++,
-        });
-      }
-      if (audioBlob) {
-        const path = await uploadMedia("audio", session.user.id, audioBlob, "audio.webm");
-        await supabase.from("media_assets").insert({
-          post_id: post.id,
-          type: "audio",
-          storage_path: path,
-          sort_order: sortOrder++,
-        });
-      }
-      if (videoBlob) {
-        const path = await uploadMedia("video", session.user.id, videoBlob, "video.webm");
-        await supabase.from("media_assets").insert({
-          post_id: post.id,
-          type: "video",
-          storage_path: path,
-          sort_order: sortOrder++,
-        });
-      }
-    } catch {
-      // Post itself saved; media upload issues surface via SyncStatus later rather than blocking save.
-    }
+      const session = await ensureSession();
 
-    setSavedPostId(post.id);
-    setSaving(false);
-    goNext();
+      // Resume an existing post on retry rather than inserting a duplicate.
+      let postId = postIdRef.current;
+      if (!postId) {
+        const { data: child } = await supabase
+          .from("child_profiles")
+          .select("id")
+          .eq("parent_user_id", session.user.id)
+          .limit(1)
+          .maybeSingle();
+
+        if (!child) {
+          setError("We couldn't find your profile. Please close and reopen the app.");
+          setSaving(false);
+          return;
+        }
+
+        const { data: post, error: postError } = await supabase
+          .from("posts")
+          .insert({
+            child_profile_id: child.id,
+            title: draft.title || "Untitled",
+            edited_text: draft.body,
+            original_transcript: transcript || null,
+            ai_mode: transcript ? activeMode : null,
+            category: draft.category,
+            background: draft.background,
+            stickers: draft.stickers,
+            status: "publishedToJournal",
+          })
+          .select("id")
+          .single();
+
+        if (postError || !post) throw postError ?? new Error("post insert failed");
+        postId = post.id;
+        postIdRef.current = postId;
+      }
+
+      // Upload media, skipping anything already uploaded on a previous attempt.
+      let sortOrder = uploadedRef.current.photos;
+      for (let i = uploadedRef.current.photos; i < photoFiles.length; i++) {
+        const path = await uploadMedia("image", session.user.id, photoFiles[i], "photo");
+        await supabase.from("media_assets").insert({ post_id: postId, type: "image", storage_path: path, sort_order: sortOrder++ });
+        uploadedRef.current.photos = i + 1;
+      }
+      if (audioBlob && !uploadedRef.current.audio) {
+        const path = await uploadMedia("audio", session.user.id, audioBlob, "audio");
+        await supabase.from("media_assets").insert({ post_id: postId, type: "audio", storage_path: path, sort_order: sortOrder++ });
+        uploadedRef.current.audio = true;
+      }
+      if (videoBlob && !uploadedRef.current.video) {
+        const path = await uploadMedia("video", session.user.id, videoBlob, "video");
+        await supabase.from("media_assets").insert({ post_id: postId, type: "video", storage_path: path, sort_order: sortOrder++ });
+        uploadedRef.current.video = true;
+      }
+
+      setSavedPostId(postId);
+      setSaving(false);
+      goNext();
+    } catch {
+      // The post and any already-uploaded media are kept; tapping Save again
+      // resumes from where it stopped without duplicating anything.
+      setError("Your work is safe. Tap Save to My Journal to finish — I'll pick up where we left off.");
+      setSaving(false);
+    }
   }
 
   const heading = useMemo(() => {

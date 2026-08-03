@@ -1,6 +1,7 @@
 "use client";
 
 import type { Sticker } from "@/lib/types";
+import { uuid } from "@/lib/uuid";
 
 const STICKER_LIBRARY = [
   "❤️", "⭐", "🌸", "🌈", "🧵", "👗", "🎵", "🐱", "✨", "🍓",
@@ -21,7 +22,7 @@ export function StickerPicker({ stickers, onChange, max = 5 }: StickerPickerProp
       return;
     }
     if (stickers.length >= max) return;
-    onChange([...stickers, { id: crypto.randomUUID(), emoji, slot: stickers.length }]);
+    onChange([...stickers, { id: uuid(), emoji, slot: stickers.length }]);
   }
 
   return (

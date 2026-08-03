@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Mic, Pause, Play, Square, RotateCcw } from "lucide-react";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { pickAudioFormat } from "@/lib/recording";
 
 interface VoiceRecorderProps {
   maxSeconds?: number;
@@ -46,11 +47,17 @@ export function VoiceRecorder({ maxSeconds = 180, onDone }: VoiceRecorderProps) 
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       streamRef.current = stream;
-      const recorder = new MediaRecorder(stream);
+      const { mimeType } = pickAudioFormat();
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
       chunksRef.current = [];
-      recorder.ondataavailable = (e) => chunksRef.current.push(e.data);
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
+      };
       recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "audio/webm" });
+        // Use the recorder's real mime type so the blob is labelled correctly
+        // (iOS records mp4, not webm) for playback, upload, and transcription.
+        const type = recorder.mimeType || mimeType || "audio/webm";
+        const blob = new Blob(chunksRef.current, { type });
         setAudioUrl(URL.createObjectURL(blob));
         streamRef.current?.getTracks().forEach((t) => t.stop());
       };

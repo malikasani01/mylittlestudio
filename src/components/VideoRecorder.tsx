@@ -3,6 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Video, Square, RotateCcw } from "lucide-react";
 import { PrimaryButton } from "@/components/PrimaryButton";
+import { pickVideoFormat } from "@/lib/recording";
 
 interface VideoRecorderProps {
   maxSeconds?: number;
@@ -37,11 +38,15 @@ export function VideoRecorder({ maxSeconds = 60, onDone }: VideoRecorderProps) {
         videoRef.current.srcObject = stream;
         await videoRef.current.play();
       }
-      const recorder = new MediaRecorder(stream);
+      const { mimeType } = pickVideoFormat();
+      const recorder = mimeType ? new MediaRecorder(stream, { mimeType }) : new MediaRecorder(stream);
       chunksRef.current = [];
-      recorder.ondataavailable = (e) => chunksRef.current.push(e.data);
+      recorder.ondataavailable = (e) => {
+        if (e.data && e.data.size > 0) chunksRef.current.push(e.data);
+      };
       recorder.onstop = () => {
-        const blob = new Blob(chunksRef.current, { type: "video/webm" });
+        const type = recorder.mimeType || mimeType || "video/webm";
+        const blob = new Blob(chunksRef.current, { type });
         setVideoUrl(URL.createObjectURL(blob));
         streamRef.current?.getTracks().forEach((t) => t.stop());
         if (videoRef.current) videoRef.current.srcObject = null;

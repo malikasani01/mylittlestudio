@@ -569,6 +569,106 @@ function renderNails(state: FashionState, nailHex: string) {
   );
 }
 
+// ---------- PATTERNS ----------
+function starPath(cx: number, cy: number, r: number) {
+  const pts: string[] = [];
+  for (let i = 0; i < 5; i++) {
+    const ao = Math.PI / 2 + (i * 2 * Math.PI) / 5;
+    const ai = ao + Math.PI / 5;
+    pts.push(`${(cx + r * Math.cos(ao)).toFixed(1)},${(cy - r * Math.sin(ao)).toFixed(1)}`);
+    pts.push(`${(cx + r * 0.45 * Math.cos(ai)).toFixed(1)},${(cy - r * 0.45 * Math.sin(ai)).toFixed(1)}`);
+  }
+  return `M${pts.join(" L")} Z`;
+}
+
+function motif(kind: string, x: number, y: number, key: string) {
+  const s = 5;
+  switch (kind) {
+    case "hearts":
+      return (
+        <path
+          key={key}
+          d={`M${x} ${y + s * 0.3} C ${x} ${y - s * 0.3}, ${x - s} ${y - s * 0.3}, ${x - s} ${y + s * 0.25} C ${x - s} ${y + s * 0.7}, ${x} ${y + s * 0.9}, ${x} ${y + s * 1.1} C ${x} ${y + s * 0.9}, ${x + s} ${y + s * 0.7}, ${x + s} ${y + s * 0.25} C ${x + s} ${y - s * 0.3}, ${x} ${y - s * 0.3}, ${x} ${y + s * 0.3} Z`}
+          fill="#fff"
+          opacity="0.9"
+        />
+      );
+    case "stars":
+      return <path key={key} d={starPath(x, y, s)} fill="#fff" opacity="0.9" />;
+    case "flowers":
+      return (
+        <g key={key} opacity="0.9">
+          {[0, 1, 2, 3, 4].map((i) => {
+            const a = (i * 2 * Math.PI) / 5;
+            return <circle key={i} cx={x + s * 0.8 * Math.cos(a)} cy={y + s * 0.8 * Math.sin(a)} r={s * 0.55} fill="#fff" />;
+          })}
+          <circle cx={x} cy={y} r={s * 0.55} fill="#F8E49A" />
+        </g>
+      );
+    case "sparkles":
+      return (
+        <path
+          key={key}
+          d={`M${x} ${y - s} Q${x} ${y} ${x + s} ${y} Q${x} ${y} ${x} ${y + s} Q${x} ${y} ${x - s} ${y} Q${x} ${y} ${x} ${y - s} Z`}
+          fill="#fff"
+          opacity="0.9"
+        />
+      );
+    case "butterflies":
+      return (
+        <g key={key} opacity="0.9" fill="#fff">
+          <ellipse cx={x - 3} cy={y - 2} rx="3" ry="4" />
+          <ellipse cx={x - 3} cy={y + 3} rx="3" ry="3" />
+          <ellipse cx={x + 3} cy={y - 2} rx="3" ry="4" />
+          <ellipse cx={x + 3} cy={y + 3} rx="3" ry="3" />
+          <rect x={x - 0.6} y={y - 4} width="1.2" height="8" rx="0.6" fill="#3D3545" opacity="0.6" />
+        </g>
+      );
+    case "stripes":
+      return <rect key={key} x={x - 9} y={y - 1.5} width="18" height="3" rx="1.5" fill="#fff" opacity="0.85" />;
+    case "rainbow":
+      return (
+        <g key={key} fill="none" strokeWidth="2">
+          <path d={`M${x - 7} ${y + 4} Q${x} ${y - 6} ${x + 7} ${y + 4}`} stroke="#F7B8D4" />
+          <path d={`M${x - 5} ${y + 4} Q${x} ${y - 3} ${x + 5} ${y + 4}`} stroke="#F8E49A" />
+          <path d={`M${x - 3} ${y + 4} Q${x} ${y - 0.5} ${x + 3} ${y + 4}`} stroke="#A9D8F5" />
+        </g>
+      );
+    default: // polka-dots
+      return <circle key={key} cx={x} cy={y} r="3.2" fill="#fff" opacity="0.85" />;
+  }
+}
+
+function renderPattern(state: FashionState, secondary: string) {
+  const p = state.pattern;
+  if (!p || p === "none") return null;
+  void secondary;
+
+  const isDress = state.clothingMode === "dress" && state.dress;
+  const hasTop = state.clothingMode === "outfit" && state.top;
+  if (!isDress && !hasTop) return null;
+
+  const points: [number, number][] = isDress
+    ? [
+        [120, 200],
+        [106, 240],
+        [134, 242],
+        [120, 256],
+        [100, 272],
+        [140, 273],
+        [120, 288],
+      ]
+    : [
+        [104, 182],
+        [136, 184],
+        [120, 194],
+        [110, 205],
+        [132, 205],
+      ];
+
+  return <g>{points.map(([x, y], i) => motif(p, x, y, `pat-${i}`))}</g>;
+}
+
 export function CharacterCanvas({ state }: { state: FashionState }) {
   const skin = hexFor(SKIN_TONES, state.skinTone, "#D8A074");
   const rawHair = hexFor(HAIR_COLORS, state.hairColor, "#4A3222");
@@ -604,7 +704,11 @@ export function CharacterCanvas({ state }: { state: FashionState }) {
         {/* neck */}
         <path d="M110 146 Q120 156 130 146 L130 168 L110 168 Z" fill={skin} />
 
+        {/* torso skin base so crop tops / strappy dresses show skin, not the background */}
+        <path d="M90 164 Q120 158 150 164 L146 226 Q120 234 94 226 Z" fill={skin} />
+
         {renderTorsoClothing(state, primary, secondary)}
+        {renderPattern(state, secondary)}
         {renderNails(state, nailHex)}
 
         {/* head */}
